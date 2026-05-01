@@ -1,0 +1,14 @@
+.clasp.json
+.clasprc.json
+node_modules/
+.DS_Store
+*.log
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.env
+*.secret
+credentials*.json
+token*.json
