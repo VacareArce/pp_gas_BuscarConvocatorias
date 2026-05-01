@@ -13,10 +13,22 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Agente Empleos HV')
     .addItem('1. Configurar estructura', 'configurarHoja')
+    .addItem('Ver manual de uso', 'mostrarManualUso')
     .addSeparator()
     .addItem('Instalar trigger diario', 'instalarTriggerDiarioEmpleos')
     .addItem('Eliminar triggers del agente', 'eliminarTriggersAgenteEmpleos')
     .addToUi();
+}
+
+/**
+ * Muestra un manual embebido para uso desde Google Sheets.
+ */
+function mostrarManualUso() {
+  const html = HtmlService.createHtmlOutputFromFile('manual')
+    .setTitle('Manual de uso - Agente Empleos HV')
+    .setWidth(900)
+    .setHeight(700);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Manual de uso');
 }
 
 /**

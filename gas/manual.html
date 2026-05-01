@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #1f2937;
+        --muted: #5f6b7a;
+        --line: #d9e2ec;
+        --brand: #2563eb;
+        --brand-soft: #e8f0ff;
+        --warn: #fff7ed;
+        --warn-line: #fdba74;
+        --ok: #ecfdf5;
+        --ok-line: #6ee7b7;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      h1, h2, h3 {
+        margin: 0 0 10px;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      p {
+        margin: 0 0 12px;
+      }
+
+      code {
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: #eef2f7;
+        color: #111827;
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+      }
+
+      ul, ol {
+        margin-top: 6px;
+        padding-left: 22px;
+      }
+
+      li {
+        margin: 4px 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        background: var(--panel);
+      }
+
+      th, td {
+        border: 1px solid var(--line);
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f1f5f9;
+      }
+
+      .hero, .card, details {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero {
+        padding: 22px;
+        margin-bottom: 16px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .alert {
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin: 12px 0;
+      }
+
+      .alert.ok {
+        background: var(--ok);
+        border: 1px solid var(--ok-line);
+      }
+
+      .alert.warn {
+        background: var(--warn);
+        border: 1px solid var(--warn-line);
+      }
+
+      details {
+        margin: 10px 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      summary {
+        cursor: pointer;
+        padding: 14px 16px;
+        font-weight: 700;
+        background: #ffffff;
+      }
+
+      details[open] summary {
+        border-bottom: 1px solid var(--line);
+        background: #f8fafc;
+      }
+
+      .details-body {
+        padding: 16px;
+      }
+
+      .checklist {
+        counter-reset: step;
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .checklist li {
+        counter-increment: step;
+        display: flex;
+        gap: 10px;
+        margin: 8px 0;
+      }
+
+      .checklist li::before {
+        content: counter(step);
+        width: 22px;
+        height: 22px;
+        flex: 0 0 22px;
+        border-radius: 999px;
+        background: var(--brand);
+        color: white;
+        text-align: center;
+        line-height: 22px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      @media (max-width: 760px) {
+        body {
+          padding: 14px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <span class="badge">Agente Empleos HV</span>
+      <h1>Manual de uso</h1>
+      <p class="subtitle">Guia rapida para configurar y operar el buscador pasivo de empleos desde Google Sheets.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Inicio rapido</h2>
+        <ol class="checklist">
+          <li>Configura la propiedad del script <code>GEMINI_API_KEY</code> en Apps Script.</li>
+          <li>Ejecuta <code>Agente Empleos HV &gt; Configurar estructura</code>.</li>
+          <li>Diligencia la pestaña <code>Perfil</code> con datos del CV.</li>
+          <li>Revisa la pestaña <code>Config</code>, especialmente salarios y prompts.</li>
+          <li>Ejecuta <code>Instalar trigger diario</code>.</li>
+          <li>Revisa periodicamente <code>Empleos</code>, <code>ColaIA</code> y <code>Log</code>.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h2>Reglas clave</h2>
+        <ul>
+          <li>El agente funciona de forma pasiva con trigger diario.</li>
+          <li>No aplica automaticamente a empleos.</li>
+          <li>Si una oferta no publica salario, debe quedar como <code>Revisar</code>, no <code>Aplicar</code>.</li>
+          <li>Los prompts se pueden editar desde <code>Config</code>.</li>
+          <li>Las variables con <code>{{doble_llave}}</code> las reemplaza Apps Script antes de llamar a Gemini.</li>
+        </ul>
+      </div>
+    </section>
+
+    <details open>
+      <summary>Que hace el agente</summary>
+      <div class="details-body">
+        <p>El agente busca empleos remunerados alineados con un perfil profesional. Luego analiza cada oportunidad y la clasifica por modalidad, viabilidad desde la ciudad base, salario, compatibilidad y accion recomendada.</p>
+        <p>El flujo diario ejecuta una busqueda pequeña y analiza un lote limitado para cuidar la cuota gratuita de Gemini.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Como diligenciar Perfil</summary>
+      <div class="details-body">
+        <p>La hoja <code>Perfil</code> es el insumo principal de busqueda. Mientras mas claro sea el perfil, mejores resultados tendra la IA.</p>
+        <table>
+          <tr><th>Campo</th><th>Que poner</th></tr>
+          <tr><td><code>Profesion principal</code></td><td>Profesion, especialidad y enfoque principal.</td></tr>
+          <tr><td><code>Anios de experiencia</code></td><td>Experiencia total aproximada para evitar cargos demasiado junior.</td></tr>
+          <tr><td><code>Areas fuertes</code></td><td>Temas donde la persona tiene experiencia real.</td></tr>
+          <tr><td><code>Cargos objetivo</code></td><td>Titulos de cargos que se deben priorizar.</td></tr>
+          <tr><td><code>Texto completo CV</code></td><td>Texto extraido del PDF o resumen amplio del CV.</td></tr>
+        </table>
+        <div class="alert ok">Las celdas de la columna A tienen notas descriptivas. Pasa el mouse sobre cada campo para ver ayuda.</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Como ajustar Config</summary>
+      <div class="details-body">
+        <p>La hoja <code>Config</code> controla el comportamiento sin modificar codigo.</p>
+        <table>
+          <tr><th>Clave</th><th>Uso</th></tr>
+          <tr><td><code>RESULTADOS_POR_BUSQUEDA</code></td><td>Maximo de empleos nuevos por ejecucion diaria.</td></tr>
+          <tr><td><code>EMPLEOS_POR_LOTE_ANALISIS</code></td><td>Maximo de empleos analizados por lote.</td></tr>
+          <tr><td><code>FUENTES_PRIORITARIAS</code></td><td>Fuentes que la IA debe priorizar.</td></tr>
+          <tr><td><code>EXCLUIR</code></td><td>Tipos de ofertas que deben evitarse.</td></tr>
+          <tr><td><code>PROMPT_BUSQUEDA</code></td><td>Prompt usado para encontrar empleos.</td></tr>
+          <tr><td><code>PROMPT_ANALISIS</code></td><td>Prompt usado para evaluar cada empleo.</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>Salarios y multiplicadores</summary>
+      <div class="details-body">
+        <p>El sistema usa un salario base y multiplicadores para exigir mejores condiciones cuando una oferta requiere mudanza.</p>
+        <table>
+          <tr><th>Clave</th><th>Ejemplo</th><th>Significado</th></tr>
+          <tr><td><code>SALARIO_BASE_MONEDA</code></td><td>COP</td><td>Moneda de referencia.</td></tr>
+          <tr><td><code>SALARIO_BASE_MINIMO</code></td><td>6500000</td><td>Minimo para remoto o ciudad base.</td></tr>
+          <tr><td><code>MULTIPLICADOR_OTRA_CIUDAD_COLOMBIA</code></td><td>2</td><td>Minimo si exige mudarse dentro del pais.</td></tr>
+          <tr><td><code>MULTIPLICADOR_OTRO_PAIS</code></td><td>3</td><td>Minimo si exige mudarse a otro pais.</td></tr>
+        </table>
+        <p>Ejemplo: con base 6.500.000 COP, otra ciudad exige 13.000.000 COP y otro pais 19.500.000 COP.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Prompts y variables con doble llave</summary>
+      <div class="details-body">
+        <p>Las variables con <code>{{...}}</code> son marcadores. Gemini no las interpreta directamente; Apps Script las reemplaza antes de enviar el prompt.</p>
+        <p>Ejemplo:</p>
+        <p><code>La persona vive en {{ciudad_base}}, {{pais_base}}.</code></p>
+        <p>Se convierte en algo como:</p>
+        <p><code>La persona vive en Medellin, Colombia.</code></p>
+        <table>
+          <tr><th>Variable</th><th>Significado</th></tr>
+          <tr><td><code>{{perfil}}</code></td><td>Texto construido desde la hoja Perfil.</td></tr>
+          <tr><td><code>{{empleo}}</code></td><td>Datos de una fila de empleo durante el analisis.</td></tr>
+          <tr><td><code>{{empleos_existentes}}</code></td><td>Resumen de empleos ya registrados para evitar duplicados.</td></tr>
+          <tr><td><code>{{salario_minimo_otra_ciudad_colombia}}</code></td><td>Salario base multiplicado para mudanza dentro del pais.</td></tr>
+          <tr><td><code>{{salario_minimo_otro_pais}}</code></td><td>Salario base multiplicado para mudanza internacional.</td></tr>
+        </table>
+        <div class="alert warn">No cambies el nombre dentro de las dobles llaves si no existe en el codigo. Si escribes <code>{{ciudad}}</code> en vez de <code>{{ciudad_base}}</code>, no se reemplazara.</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Como interpretar Empleos</summary>
+      <div class="details-body">
+        <table>
+          <tr><th>Columna</th><th>Significado</th></tr>
+          <tr><td><code>Modalidad</code></td><td>Remoto, Hibrido, Presencial o No claro.</td></tr>
+          <tr><td><code>Ejecutable desde Medellin</code></td><td>Indica si se puede trabajar desde la ciudad base.</td></tr>
+          <tr><td><code>Puntaje match</code></td><td>Compatibilidad de 0 a 100.</td></tr>
+          <tr><td><code>Accion recomendada</code></td><td>Aplicar, Revisar o Descartar.</td></tr>
+          <tr><td><code>Estado</code></td><td>Seguimiento manual: Nuevo, Revisado, Aplicado, Descartado o Vencido.</td></tr>
+          <tr><td><code>Cumple salario</code></td><td>Si, No o No claro segun la regla salarial aplicable.</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>Aplicar, Revisar y Descartar</summary>
+      <div class="details-body">
+        <ul>
+          <li><code>Aplicar</code>: alto ajuste, condiciones claras, viable desde ciudad base o cumple salario de mudanza.</li>
+          <li><code>Revisar</code>: oportunidad interesante, pero falta confirmar salario, modalidad o requisitos.</li>
+          <li><code>Descartar</code>: bajo ajuste, no remunerado, demasiado junior o no cumple criterios clave.</li>
+        </ul>
+        <div class="alert warn">La IA recomienda. La decision final y el cambio de <code>Estado</code> a <code>Aplicado</code> o <code>Descartado</code> son manuales.</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Ejecucion diaria y errores comunes</summary>
+      <div class="details-body">
+        <p>Para activar el flujo automatico usa <code>Instalar trigger diario</code>. Para detenerlo usa <code>Eliminar triggers del agente</code>.</p>
+        <table>
+          <tr><th>Problema</th><th>Que revisar</th></tr>
+          <tr><td>No aparece el menu</td><td>Recarga la hoja. Si persiste, ejecuta <code>onOpen</code> desde Apps Script.</td></tr>
+          <tr><td>Error de API key</td><td>Confirma que existe la propiedad del script <code>GEMINI_API_KEY</code>.</td></tr>
+          <tr><td>No encuentra empleos</td><td>Completa mejor <code>Perfil</code> y revisa si el prompt es demasiado restrictivo.</td></tr>
+          <tr><td>Muchos resultados irrelevantes</td><td>Ajusta <code>EXCLUIR</code>, <code>FUENTES_PRIORITARIAS</code> y <code>PROMPT_BUSQUEDA</code>.</td></tr>
+          <tr><td>Errores 429 o 503</td><td>Son cuota/saturacion. El sistema agenda reintentos diferidos.</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>Seguridad y privacidad</summary>
+      <div class="details-body">
+        <ul>
+          <li>No pegues API keys en <code>Config</code>. Usa propiedades del script.</li>
+          <li>No publiques hojas de vida, telefonos, correos ni capturas con datos personales.</li>
+          <li>No publiques <code>.clasp.json</code> porque contiene el ID real del Apps Script.</li>
+          <li>Si subes el proyecto a GitHub, usa <code>.clasp.example.json</code> como plantilla segura.</li>
+        </ul>
+      </div>
+    </details>
+  </body>
+</html>

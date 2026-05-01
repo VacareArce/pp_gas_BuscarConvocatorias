@@ -18,6 +18,7 @@ El proyecto esta pensado para personas que quieren monitorear empleos o convocat
 - Cola de analisis en `ColaIA`.
 - Registro de ejecuciones y errores en `Log`.
 - Sin fichas tecnicas automaticas para ahorrar uso de IA.
+- Manual de uso embebido disponible desde el menu de Google Sheets.
 
 ## Estructura
 
@@ -92,6 +93,7 @@ La API key se lee desde propiedades del script, no desde el codigo fuente.
 
 - Manual de implementacion: [`MANUAL_IMPLEMENTACION.md`](MANUAL_IMPLEMENTACION.md)
 - Descripcion ampliada para GitHub: [`docs/GITHUB_PROJECT_DESCRIPTION.md`](docs/GITHUB_PROJECT_DESCRIPTION.md)
+- Manual embebido en Google Sheets: `Agente Empleos HV > Ver manual de uso`
 
 ## Licencia
 
