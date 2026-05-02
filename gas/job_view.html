@@ -192,6 +192,8 @@
       <div class="actions">
         <button id="abrir-link" onclick="abrirLink()">Abrir link</button>
         <button class="secondary" onclick="copiarResumen()">Copiar resumen</button>
+        <button class="secondary" onclick="navegar(-1)">← Anterior</button>
+        <button class="secondary" onclick="navegar(1)">Siguiente →</button>
       </div>
     </div>
 
@@ -252,7 +254,26 @@
     </div>
 
     <script>
-      const empleo = <?!= empleoJson ?>;
+      let empleo = <?!= empleoJson ?>;
+
+      function navegar(offset) {
+        const btnActions = document.querySelector('.actions');
+        btnActions.style.opacity = '0.5';
+        const nuevaFila = parseInt(empleo.fila, 10) + offset;
+        
+        google.script.run.withSuccessHandler(function(nuevoEmpleo) {
+          btnActions.style.opacity = '1';
+          if (nuevoEmpleo) {
+            empleo = nuevoEmpleo;
+            render();
+          } else {
+            alert('No hay más empleos en esta dirección o la fila seleccionada no es válida.');
+          }
+        }).withFailureHandler(function(error) {
+          btnActions.style.opacity = '1';
+          alert('Error: ' + error.message);
+        }).obtenerEmpleoData(nuevaFila);
+      }
 
       function get(key) {
         return empleo[key] || '';

@@ -12,3 +12,8 @@ node_modules/
 *.secret
 credentials*.json
 token*.json
+
+# Datos locales
+*.xlsx
+csv_exports/
+.venv/

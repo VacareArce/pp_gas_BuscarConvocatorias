@@ -89,6 +89,18 @@ function leerEmpleoSeleccionado_(sheet, fila) {
 }
 
 /**
+ * Función expuesta para que el modal job_view HTML pueda navegar a otra fila.
+ */
+function obtenerEmpleoData(fila) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.SHEETS.EMPLEOS);
+  if (fila <= 1 || fila > sheet.getLastRow() || sheet.getRange(fila, 2).isBlank()) {
+    return null;
+  }
+  return leerEmpleoSeleccionado_(sheet, fila);
+}
+
+/**
  * Ejecuta una prueba controlada con limites pequenos para validar configuracion.
  */
 function probarFlujoAhora() {
