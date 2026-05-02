@@ -166,6 +166,10 @@ function analizarLoteEmpleos(esManual, overrides) {
       const analisis = extraerJson_(texto, false);
       console.log('[ANALISIS] Respuesta parseada para filaEmpleo=' + filaEmpleo + ', accion=' + (analisis.accion_recomendada || 'sin accion') + ', puntaje=' + (analisis.puntaje_match || 'sin puntaje'));
       escribirAnalisisEmpleo_(empleosSheet, filaEmpleo, analisis);
+      
+      // Enviar notificacion por correo si aplica
+      enviarNotificacionEmail_(config, empleo, analisis, filaEmpleo);
+
       marcarTarea_(colaSheet, tarea.filaCola, 'Completado', '');
       console.log('[ANALISIS] Tarea completada. filaCola=' + tarea.filaCola + ', filaEmpleo=' + filaEmpleo);
       procesados++;
@@ -361,4 +365,94 @@ function escribirAnalisisEmpleo_(sheet, fila, analisis) {
   sheet.getRange(fila, 29).setValue(new Date()).setNumberFormat('dd/MM/yyyy HH:mm');
   sheet.getRange(fila, 31).setValue(analisis.salario_minimo_aplicable || '');
   sheet.getRange(fila, 32).setValue(analisis.cumple_salario || 'No claro');
+}
+
+/**
+ * Envia una notificacion por correo si la accion recomendada cumple el umbral minimo configurado.
+ */
+function enviarNotificacionEmail_(config, empleoOriginal, analisis, filaEmpleo, throwOnError = false) {
+  if (String(config.ENVIAR_CORREOS || '').trim().toLowerCase() !== 'si') return;
+  
+  const accionMinima = String(config.NOTIFICAR_ACCION_MINIMA || 'Revisar').toLowerCase().trim();
+  const accionRecomendada = String(analisis.accion_recomendada || '').toLowerCase().trim();
+  
+  let enviar = false;
+  if (accionMinima === 'aplicar' && accionRecomendada.includes('aplicar')) enviar = true;
+  else if (accionMinima === 'revisar' && (accionRecomendada.includes('aplicar') || accionRecomendada.includes('revisar'))) enviar = true;
+  else if (accionMinima !== 'aplicar' && accionMinima !== 'revisar' && (accionRecomendada.includes('aplicar') || accionRecomendada.includes('revisar'))) enviar = true; // Fallback
+  
+  if (!enviar) return;
+
+  const destinatarios = String(config.CORREOS_DESTINO || '').trim() || Session.getEffectiveUser().getEmail();
+  
+  if (!destinatarios) {
+    const errMsg = 'No se pudo determinar el correo destino. La funcion getEffectiveUser devolvio vacio. Agrega un correo en CORREOS_DESTINO.';
+    if (throwOnError) throw new Error(errMsg);
+    escribirLog_('CORREO', 'ERROR', errMsg, filaEmpleo);
+    return;
+  }
+  
+  // Mapeo de campos de analisis a los headers del template
+  const headersMap = {
+    'cargo': 'Cargo',
+    'organizacion': 'Organizacion',
+    'ciudad': 'Ciudad',
+    'pais': 'Pais',
+    'modalidad': 'Modalidad',
+    'puntaje_match': 'Puntaje match',
+    'link': 'Link',
+    'resumen': 'Resumen',
+    'requisitos_clave': 'Requisitos clave',
+    'notas_para_aplicar': 'Notas para aplicar',
+    'nivel_match': 'Nivel match',
+    'prioridad': 'Prioridad',
+    'razon_match': 'Razon match',
+    'brechas': 'Brechas',
+    'salario': 'Salario',
+    'moneda': 'Moneda',
+    'cumple_salario': 'Cumple salario',
+    'ejecutable_desde_medellin': 'Ejecutable desde Medellin',
+    'fecha_limite': 'Fecha limite',
+    'fuente': 'Fuente',
+    'accion_recomendada': 'Accion recomendada'
+  };
+  
+  const datosParaPlantilla = { fila: filaEmpleo };
+  
+  // Copiar lo original primero
+  for (const [key, val] of Object.entries(empleoOriginal)) {
+    datosParaPlantilla[key] = val;
+  }
+  
+  // Sobrescribir/agregar lo del analisis
+  for (const [key, val] of Object.entries(analisis)) {
+    const header = headersMap[key] || key;
+    datosParaPlantilla[header] = val;
+  }
+  
+  try {
+    const template = HtmlService.createTemplateFromFile('email_template');
+    template.empleo = datosParaPlantilla;
+    const htmlBody = template.evaluate().getContent();
+    
+    const accionTitulo = (analisis.accion_recomendada || 'REVISAR').toUpperCase();
+    const cargo = empleoOriginal['Cargo'] || 'Cargo desconocido';
+    const org = empleoOriginal['Organizacion'] || 'Org. desconocida';
+    const asunto = `[Nuevo Empleo IA] ${accionTitulo} - ${cargo} en ${org}`;
+    
+    MailApp.sendEmail({
+      to: destinatarios,
+      subject: asunto,
+      htmlBody: htmlBody
+    });
+    
+    const exitoMsg = `Correo notificacion enviado exitosamente a ${destinatarios}`;
+    console.log(`[ANALISIS] ${exitoMsg} para fila ${filaEmpleo}`);
+    escribirLog_('CORREO', 'OK', exitoMsg, filaEmpleo);
+  } catch (e) {
+    const errorMsg = `Error enviando correo a ${destinatarios}: ${e.message}`;
+    console.error(`[ANALISIS] ${errorMsg}`);
+    escribirLog_('CORREO', 'ERROR', errorMsg, filaEmpleo);
+    if (throwOnError) throw e;
+  }
 }

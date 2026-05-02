@@ -145,7 +145,10 @@ const CONFIG_DEFAULTS = [
   ['EXCLUIR', 'voluntariado, practicas no remuneradas, cursos, empleos sin remuneracion'],
   ['PROMPT_BUSQUEDA', DEFAULT_PROMPT_BUSQUEDA],
   ['PROMPT_ANALISIS', DEFAULT_PROMPT_ANALISIS],
-  ['PROMPT_ACTUALIZACION', DEFAULT_PROMPT_ACTUALIZACION]
+  ['PROMPT_ACTUALIZACION', DEFAULT_PROMPT_ACTUALIZACION],
+  ['ENVIAR_CORREOS', 'Si'],
+  ['CORREOS_DESTINO', ''],
+  ['NOTIFICAR_ACCION_MINIMA', 'Revisar']
 ];
 
 const CONFIG_NOTES = {
@@ -174,9 +177,12 @@ const CONFIG_NOTES = {
   'FUENTES_PRIORITARIAS': 'Portales o fuentes que la IA debe priorizar al buscar empleos.',
   'IDIOMAS_ACEPTADOS': 'Idiomas aceptables para las ofertas y postulaciones.',
   'EXCLUIR': 'Tipos de ofertas que deben evitarse, como voluntariados, practicas no remuneradas o cargos irrelevantes.',
-  'PROMPT_BUSQUEDA': 'Prompt que define como Gemini debe buscar empleos nuevos. Puedes ajustarlo sin tocar codigo.',
-  'PROMPT_ANALISIS': 'Prompt que define como Gemini debe evaluar match, modalidad, salario y accion recomendada.',
-  'PROMPT_ACTUALIZACION': 'Prompt reservado para futuras revisiones de vigencia de ofertas existentes.'
+  ['PROMPT_BUSQUEDA']: 'Prompt que define como Gemini debe buscar empleos nuevos. Puedes ajustarlo sin tocar codigo.',
+  ['PROMPT_ANALISIS']: 'Prompt que define como Gemini debe evaluar match, modalidad, salario y accion recomendada.',
+  ['PROMPT_ACTUALIZACION']: 'Prompt reservado para futuras revisiones de vigencia de ofertas existentes.',
+  ['ENVIAR_CORREOS']: 'Si esta en Si, el Agente enviara un correo cuando encuentre y analice un empleo prometedor.',
+  ['CORREOS_DESTINO']: 'Lista separada por comas de los correos a notificar. Si esta vacio, se enviara al propietario del script.',
+  ['NOTIFICAR_ACCION_MINIMA']: 'Nivel minimo de accion (Aplicar o Revisar) para que se dispare el correo.'
 };
 
 const EMPLEOS_HEADERS = [

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #f4f7fb;
+        color: #172033;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #f4f7fb;
+      }
+
+      .hero, .card {
+        background: #ffffff;
+        border: 1px solid #d8e0ea;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      h1 { margin: 0 0 8px 0; font-size: 22px; color: #172033; }
+      h2 { margin: 0 0 12px 0; font-size: 16px; color: #172033; border-bottom: 1px solid #d8e0ea; padding-bottom: 6px; }
+      p { margin: 0; }
+      a { color: #1d4ed8; text-decoration: none; }
+      
+      .subtitle { color: #667085; margin-bottom: 12px; font-size: 14px; }
+      .label { display: block; color: #667085; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
+      .value { white-space: pre-wrap; margin-bottom: 12px; }
+
+      .chip {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-right: 6px;
+        margin-bottom: 8px;
+        background: #f1f5f9;
+        color: #334155;
+      }
+
+      .chip.apply { background: #ecfdf3; color: #047857; }
+      .chip.review { background: #fffbeb; color: #92400e; }
+      .chip.discard { background: #fef3f2; color: #b42318; }
+      .chip.brand { background: #e6fffb; color: #0f766e; }
+
+      .button {
+        display: inline-block;
+        background: #0f766e;
+        color: #ffffff !important;
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+      td { padding: 8px; vertical-align: top; border: 1px solid #d8e0ea; }
+      td.bg-light { background: #fbfdff; }
+      
+      .metric-label { color: #667085; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+      .metric-value { font-size: 16px; font-weight: bold; color: #172033; margin-top: 2px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="hero">
+        <? 
+           var accionType = 'info';
+           var acc = (empleo['Accion recomendada'] || '').toLowerCase();
+           if (acc.includes('aplicar')) accionType = 'apply';
+           else if (acc.includes('descartar')) accionType = 'discard';
+           else if (acc.includes('revisar')) accionType = 'review';
+        ?>
+        <div>
+          <span class="chip <?= accionType ?>"><?= empleo['Accion recomendada'] || 'Sin accion' ?></span>
+          <span class="chip brand"><?= empleo['Modalidad'] || 'Modalidad no clara' ?></span>
+          <span class="chip">Match <?= empleo['Puntaje match'] || '0' ?></span>
+        </div>
+        
+        <h1><?= empleo['Cargo'] || 'Empleo sin cargo' ?></h1>
+        <p class="subtitle"><?= empleo['Organizacion'] || 'Organizacion no disponible' ?> &middot; <?= [empleo['Ciudad'], empleo['Pais']].filter(Boolean).join(', ') || 'Ubicacion no clara' ?></p>
+        
+        <? if (empleo['Link']) { ?>
+          <a href="<?= empleo['Link'] ?>" class="button" target="_blank">Abrir Oferta de Empleo</a>
+        <? } ?>
+      </div>
+
+      <div class="card">
+        <h2>Resumen y Requisitos</h2>
+        <span class="label">Resumen del empleo</span>
+        <div class="value"><?= empleo['Resumen'] || 'Sin dato' ?></div>
+        
+        <span class="label">Requisitos clave</span>
+        <div class="value"><?= empleo['Requisitos clave'] || 'Sin dato' ?></div>
+        
+        <span class="label">Notas para aplicar</span>
+        <div class="value"><?= empleo['Notas para aplicar'] || 'Sin dato' ?></div>
+      </div>
+
+      <div class="card">
+        <h2>Evaluacion IA</h2>
+        <table>
+          <tr>
+            <td class="bg-light">
+              <div class="metric-label">Puntaje</div>
+              <div class="metric-value"><?= empleo['Puntaje match'] || '-' ?></div>
+            </td>
+            <td class="bg-light">
+              <div class="metric-label">Nivel</div>
+              <div class="metric-value"><?= empleo['Nivel match'] || '-' ?></div>
+            </td>
+            <td class="bg-light">
+              <div class="metric-label">Prioridad</div>
+              <div class="metric-value"><?= empleo['Prioridad'] || '-' ?></div>
+            </td>
+          </tr>
+        </table>
+        
+        <span class="label">Razon match</span>
+        <div class="value"><?= empleo['Razon match'] || 'Sin dato' ?></div>
+        
+        <span class="label">Brechas o riesgos</span>
+        <div class="value"><?= empleo['Brechas'] || 'Sin dato' ?></div>
+      </div>
+
+      <div class="card">
+        <h2>Detalles Adicionales</h2>
+        <table>
+          <tr>
+            <td>
+              <span class="label">Salario</span>
+              <div class="value" style="margin-bottom:0; font-weight:bold;"><?= empleo['Salario'] || 'No publicado' ?> <?= empleo['Moneda'] || '' ?></div>
+            </td>
+            <td>
+              <span class="label">Cumple Salario</span>
+              <div class="value" style="margin-bottom:0;"><?= empleo['Cumple salario'] || 'No aplica' ?></div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Ejecutable desde Medellin</span>
+              <div class="value" style="margin-bottom:0;"><?= empleo['Ejecutable desde Medellin'] || 'Sin dato' ?></div>
+            </td>
+            <td>
+              <span class="label">Modalidad</span>
+              <div class="value" style="margin-bottom:0;"><?= empleo['Modalidad'] || 'Sin dato' ?></div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Fecha Limite</span>
+              <div class="value" style="margin-bottom:0;"><?= empleo['Fecha limite'] || 'Sin dato' ?></div>
+            </td>
+            <td>
+              <span class="label">Fuente</span>
+              <div class="value" style="margin-bottom:0;"><?= empleo['Fuente'] || 'Sin dato' ?></div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <p style="font-size: 11px; color: #94a3b8; text-align: center;">Generado por IA &middot; Revisa la hoja "Empleos" en la fila <?= empleo.fila || '-' ?></p>
+    </div>
+  </body>
+</html>

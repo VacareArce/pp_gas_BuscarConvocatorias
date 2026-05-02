@@ -64,7 +64,7 @@ function configurarEstructuraEmpleos() {
     configSheet.autoResizeColumns(1, 2);
   } else {
     const existentes = leerTablaClaveValor_(configSheet);
-    const nuevas = CONFIG_DEFAULTS.filter(row => !existentes[row[0]]);
+    const nuevas = CONFIG_DEFAULTS.filter(row => existentes[row[0]] === undefined);
     if (nuevas.length > 0) {
       configSheet.getRange(configSheet.getLastRow() + 1, 1, nuevas.length, 2).setValues(nuevas);
     }

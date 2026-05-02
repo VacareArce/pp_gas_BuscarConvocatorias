@@ -11,17 +11,26 @@ function configurarHoja() {
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Agente Empleos HV')
-    .addItem('1. Configurar estructura', 'configurarHoja')
-    .addItem('Ver manual de uso', 'mostrarManualUso')
-    .addItem('Ver generador de prompts', 'mostrarGeneradorPrompts')
-    .addSeparator()
+  
+  const menuOperacion = ui.createMenu('Funciones del Agente')
     .addItem('Evaluar empleo seleccionado', 'mostrarEmpleoSeleccionado')
-    .addItem('Probar ahora', 'probarFlujoAhora')
-    .addItem('Aplicar parche anti-cerradas', 'aplicarParcheVigencia')
     .addSeparator()
     .addItem('Instalar trigger diario', 'instalarTriggerDiarioEmpleos')
     .addItem('Eliminar triggers del agente', 'eliminarTriggersAgenteEmpleos')
+    .addSeparator()
+    .addItem('1. Configurar estructura base', 'configurarHoja')
+    .addItem('Aplicar parche anti-cerradas', 'aplicarParcheVigencia');
+    
+  const menuPruebas = ui.createMenu('Pruebas del Agente')
+    .addItem('Probar busqueda y analisis (Test)', 'probarFlujoAhora')
+    .addItem('Probar envio de correo', 'probarNotificacionCorreo');
+
+  ui.createMenu('Agente Empleos HV')
+    .addSubMenu(menuOperacion)
+    .addSubMenu(menuPruebas)
+    .addSeparator()
+    .addItem('Ver manual de uso', 'mostrarManualUso')
+    .addItem('Ver generador de prompts', 'mostrarGeneradorPrompts')
     .addToUi();
 }
 
@@ -86,6 +95,46 @@ function leerEmpleoSeleccionado_(sheet, fila) {
   const empleo = { fila: fila };
   EMPLEOS_HEADERS.forEach((header, index) => empleo[header] = valores[index] || '');
   return empleo;
+}
+
+/**
+ * Envía un correo de prueba usando la fila seleccionada.
+ */
+function probarNotificacionCorreo() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.SHEETS.EMPLEOS);
+  
+  if (!sheet) {
+    ui.alert('Error', 'No se encuentra la hoja Empleos.', ui.ButtonSet.OK);
+    return;
+  }
+  
+  const fila = sheet.getActiveCell().getRow();
+  if (fila <= 1 || sheet.getRange(fila, 2).isBlank()) {
+    ui.alert('Seleccion invalida', 'Selecciona una fila con datos en la hoja Empleos.', ui.ButtonSet.OK);
+    return;
+  }
+  
+  try {
+    const empleo = leerEmpleoSeleccionado_(sheet, fila);
+    const config = obtenerConfig_();
+    
+    // Forzar configuracion para la prueba
+    config.ENVIAR_CORREOS = 'Si';
+    config.NOTIFICAR_ACCION_MINIMA = 'Aplicar';
+    
+    // Simular el analisis para la prueba y forzar que cumpla
+    const analisisSimulado = Object.assign({}, empleo);
+    analisisSimulado.accion_recomendada = 'Aplicar (Prueba)';
+    if (!analisisSimulado.puntaje_match) analisisSimulado.puntaje_match = '99';
+    
+    enviarNotificacionEmail_(config, empleo, analisisSimulado, fila, true);
+    
+    ui.alert('Correo enviado', 'Se envio un correo de prueba con los datos de la fila ' + fila + '. Revisa tu bandeja de entrada.', ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Error', 'Hubo un problema enviando el correo: ' + error.message, ui.ButtonSet.OK);
+  }
 }
 
 /**
