@@ -67,6 +67,9 @@ function buscarEmpleosPorPerfil(esManual, overrides) {
         console.log('[BUSQUEDA] Duplicado omitido: ' + ((empleo.cargo || 'sin cargo') + ' - ' + (empleo.organizacion || 'sin organizacion')));
         return;
       }
+      
+      // Limpiar URL de redirección temporal de Google Grounding
+      empleo.link = desofuscarEnlace_(empleo.link);
 
       const fila = [
         new Date(),
