@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #667085;
+        --line: #d8e0ea;
+        --brand: #0f766e;
+        --brand-soft: #e6fffb;
+        --red: #b42318;
+        --red-soft: #fef3f2;
+        --yellow: #92400e;
+        --yellow-soft: #fffbeb;
+        --green: #047857;
+        --green-soft: #ecfdf3;
+        --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      h1, h2, h3, p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 8px;
+        font-size: 26px;
+        line-height: 1.15;
+      }
+
+      h2 {
+        margin-bottom: 12px;
+        font-size: 17px;
+      }
+
+      a {
+        color: var(--blue);
+        overflow-wrap: anywhere;
+      }
+
+      .hero, .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
+      }
+
+      .hero {
+        padding: 22px;
+        margin-bottom: 16px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 14px;
+      }
+
+      .card {
+        padding: 16px;
+        margin-bottom: 14px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .chip.apply { background: var(--green-soft); color: var(--green); }
+      .chip.review { background: var(--yellow-soft); color: var(--yellow); }
+      .chip.discard { background: var(--red-soft); color: var(--red); }
+      .chip.info { background: var(--blue-soft); color: var(--blue); }
+      .chip.brand { background: var(--brand-soft); color: var(--brand); }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fbfdff;
+      }
+
+      .metric-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .metric-value {
+        margin-top: 4px;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .field {
+        margin-bottom: 12px;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .value {
+        white-space: pre-wrap;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: var(--brand);
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button.secondary {
+        background: #475569;
+      }
+
+      .empty {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      @media (max-width: 800px) {
+        body { padding: 14px; }
+        .grid, .two-col, .metric-row { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <div class="chips" id="chips-top"></div>
+      <h1 id="cargo"></h1>
+      <p class="subtitle"><span id="organizacion"></span> · <span id="ubicacion"></span></p>
+      <div class="actions">
+        <button id="abrir-link" onclick="abrirLink()">Abrir link</button>
+        <button class="secondary" onclick="copiarResumen()">Copiar resumen</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <main>
+        <section class="card">
+          <h2>Resumen</h2>
+          <div class="field"><span class="label">Resumen del empleo</span><div class="value" id="resumen"></div></div>
+          <div class="field"><span class="label">Requisitos clave</span><div class="value" id="requisitos"></div></div>
+          <div class="field"><span class="label">Notas para aplicar</span><div class="value" id="notas-aplicar"></div></div>
+        </section>
+
+        <section class="card">
+          <h2>Evaluacion IA</h2>
+          <div class="metric-row">
+            <div class="metric"><div class="metric-label">Puntaje match</div><div class="metric-value" id="puntaje"></div></div>
+            <div class="metric"><div class="metric-label">Nivel</div><div class="metric-value" id="nivel"></div></div>
+            <div class="metric"><div class="metric-label">Prioridad</div><div class="metric-value" id="prioridad"></div></div>
+          </div>
+          <div class="field"><span class="label">Razon match</span><div class="value" id="razon"></div></div>
+          <div class="field"><span class="label">Brechas o riesgos</span><div class="value" id="brechas"></div></div>
+        </section>
+      </main>
+
+      <aside>
+        <section class="card">
+          <h2>Datos clave</h2>
+          <div class="field"><span class="label">Accion recomendada</span><div class="value" id="accion"></div></div>
+          <div class="field"><span class="label">Estado</span><div class="value" id="estado"></div></div>
+          <div class="field"><span class="label">Modalidad</span><div class="value" id="modalidad"></div></div>
+          <div class="field"><span class="label">Ejecutable desde Medellin</span><div class="value" id="ejecutable"></div></div>
+          <div class="field"><span class="label">Clasificacion ubicacion</span><div class="value" id="clasificacion"></div></div>
+          <div class="field"><span class="label">Motivo ubicacion</span><div class="value" id="motivo"></div></div>
+        </section>
+
+        <section class="card">
+          <h2>Salario y fechas</h2>
+          <div class="two-col">
+            <div class="field"><span class="label">Salario</span><div class="value" id="salario"></div></div>
+            <div class="field"><span class="label">Moneda</span><div class="value" id="moneda"></div></div>
+          </div>
+          <div class="field"><span class="label">Salario minimo aplicable</span><div class="value" id="salario-minimo"></div></div>
+          <div class="field"><span class="label">Cumple salario</span><div class="value" id="cumple-salario"></div></div>
+          <div class="two-col">
+            <div class="field"><span class="label">Publicacion</span><div class="value" id="fecha-publicacion"></div></div>
+            <div class="field"><span class="label">Fecha limite</span><div class="value" id="fecha-limite"></div></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Fuente</h2>
+          <div class="field"><span class="label">Fuente</span><div class="value" id="fuente"></div></div>
+          <div class="field"><span class="label">Link</span><div class="value" id="link"></div></div>
+          <div class="field"><span class="label">Fila</span><div class="value" id="fila"></div></div>
+          <div class="field"><span class="label">Ultima actualizacion</span><div class="value" id="ultima"></div></div>
+        </section>
+      </aside>
+    </div>
+
+    <script>
+      const empleo = <?!= empleoJson ?>;
+
+      function get(key) {
+        return empleo[key] || '';
+      }
+
+      function text(id, value) {
+        const el = document.getElementById(id);
+        if (!value) {
+          el.innerHTML = '<span class="empty">Sin dato</span>';
+          return;
+        }
+        el.textContent = value;
+      }
+
+      function chip(label, type) {
+        return '<span class="chip ' + (type || '') + '">' + escapeHtml(label || 'Sin dato') + '</span>';
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function accionType(accion) {
+        const value = String(accion || '').toLowerCase();
+        if (value.includes('aplicar')) return 'apply';
+        if (value.includes('descartar')) return 'discard';
+        if (value.includes('revisar')) return 'review';
+        return 'info';
+      }
+
+      function render() {
+        const cargo = get('Cargo') || 'Empleo sin cargo';
+        const org = get('Organizacion') || 'Organizacion no disponible';
+        const ubicacion = [get('Ciudad'), get('Pais')].filter(Boolean).join(', ') || 'Ubicacion no clara';
+        document.getElementById('cargo').textContent = cargo;
+        document.getElementById('organizacion').textContent = org;
+        document.getElementById('ubicacion').textContent = ubicacion;
+
+        document.getElementById('chips-top').innerHTML = [
+          chip(get('Accion recomendada') || 'Sin accion', accionType(get('Accion recomendada'))),
+          chip(get('Modalidad') || 'Modalidad no clara', 'brand'),
+          chip(get('Prioridad') || 'Sin prioridad', 'info'),
+          chip(get('Puntaje match') ? 'Match ' + get('Puntaje match') : 'Sin puntaje', 'info')
+        ].join('');
+
+        text('resumen', get('Resumen'));
+        text('requisitos', get('Requisitos clave'));
+        text('notas-aplicar', get('Notas para aplicar'));
+        text('puntaje', get('Puntaje match'));
+        text('nivel', get('Nivel match'));
+        text('prioridad', get('Prioridad'));
+        text('razon', get('Razon match'));
+        text('brechas', get('Brechas'));
+        text('accion', get('Accion recomendada'));
+        text('estado', get('Estado'));
+        text('modalidad', get('Modalidad'));
+        text('ejecutable', get('Ejecutable desde Medellin'));
+        text('clasificacion', get('Clasificacion ubicacion'));
+        text('motivo', get('Motivo ubicacion'));
+        text('salario', get('Salario'));
+        text('moneda', get('Moneda'));
+        text('salario-minimo', get('Salario minimo aplicable'));
+        text('cumple-salario', get('Cumple salario'));
+        text('fecha-publicacion', get('Fecha publicacion'));
+        text('fecha-limite', get('Fecha limite'));
+        text('fuente', get('Fuente'));
+        text('fila', String(empleo.fila || ''));
+        text('ultima', get('Ultima actualizacion'));
+
+        const link = get('Link');
+        const linkEl = document.getElementById('link');
+        if (link) {
+          linkEl.innerHTML = '<a href="' + escapeHtml(link) + '" target="_blank" rel="noopener">' + escapeHtml(link) + '</a>';
+        } else {
+          linkEl.innerHTML = '<span class="empty">Sin link</span>';
+          document.getElementById('abrir-link').disabled = true;
+        }
+      }
+
+      function abrirLink() {
+        const link = get('Link');
+        if (link) window.open(link, '_blank', 'noopener');
+      }
+
+      function copiarResumen() {
+        const resumen = [
+          'Cargo: ' + (get('Cargo') || ''),
+          'Organizacion: ' + (get('Organizacion') || ''),
+          'Ubicacion: ' + ([get('Ciudad'), get('Pais')].filter(Boolean).join(', ')),
+          'Modalidad: ' + (get('Modalidad') || ''),
+          'Accion recomendada: ' + (get('Accion recomendada') || ''),
+          'Puntaje match: ' + (get('Puntaje match') || ''),
+          'Resumen: ' + (get('Resumen') || ''),
+          'Link: ' + (get('Link') || '')
+        ].join('\n');
+
+        const textarea = document.createElement('textarea');
+        textarea.value = resumen;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      render();
+    </script>
+  </body>
+</html>

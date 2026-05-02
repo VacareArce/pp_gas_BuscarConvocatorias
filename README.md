@@ -19,6 +19,10 @@ El proyecto esta pensado para personas que quieren monitorear empleos o convocat
 - Registro de ejecuciones y errores en `Log`.
 - Sin fichas tecnicas automaticas para ahorrar uso de IA.
 - Manual de uso embebido disponible desde el menu de Google Sheets.
+- Generador embebido de prompts para crear prompts personalizados con apoyo de otra IA y una hoja de vida.
+- Modo de prueba seguro desde el menu para validar el flujo con maximo 1 busqueda y 1 analisis.
+- Reintentos controlados: 1 reintento inmediato, reintentos diferidos configurables y fallo definitivo tras limite de ciclos.
+- Vista HTML del empleo seleccionado para revisar los datos extraidos de forma mas comoda.
 
 ## Estructura
 
@@ -77,7 +81,8 @@ Agente Empleos HV > Configurar estructura
 ```
 
 7. Diligenciar `Perfil` y revisar `Config`.
-8. Instalar el trigger diario:
+8. Opcionalmente ejecutar `Agente Empleos HV > Probar ahora` para validar el flujo con limites seguros.
+9. Instalar el trigger diario:
 
 ```text
 Agente Empleos HV > Instalar trigger diario
@@ -94,6 +99,9 @@ La API key se lee desde propiedades del script, no desde el codigo fuente.
 - Manual de implementacion: [`MANUAL_IMPLEMENTACION.md`](MANUAL_IMPLEMENTACION.md)
 - Descripcion ampliada para GitHub: [`docs/GITHUB_PROJECT_DESCRIPTION.md`](docs/GITHUB_PROJECT_DESCRIPTION.md)
 - Manual embebido en Google Sheets: `Agente Empleos HV > Ver manual de uso`
+- Generador de prompts en Google Sheets: `Agente Empleos HV > Ver generador de prompts`
+- Prueba controlada en Google Sheets: `Agente Empleos HV > Probar ahora`
+- Vista de detalle en Google Sheets: `Agente Empleos HV > Ver empleo seleccionado`
 
 ## Licencia
 

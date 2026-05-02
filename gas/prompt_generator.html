@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --ink: #1f2937;
+        --muted: #5f6b7a;
+        --line: #d9e2ec;
+        --brand: #7c3aed;
+        --brand-soft: #f3e8ff;
+        --code: #111827;
+        --code-bg: #f1f5f9;
+        --warn: #fff7ed;
+        --warn-line: #fdba74;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      h1, h2, h3 {
+        margin: 0 0 10px;
+        line-height: 1.2;
+      }
+
+      h1 { font-size: 26px; }
+      h2 { font-size: 18px; }
+      h3 { font-size: 15px; }
+
+      p { margin: 0 0 12px; }
+
+      code {
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: var(--code-bg);
+        color: var(--code);
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+      }
+
+      pre {
+        margin: 12px 0;
+        padding: 14px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #0f172a;
+        color: #e5e7eb;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+      }
+
+      ul, ol { padding-left: 22px; }
+      li { margin: 4px 0; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        background: var(--panel);
+      }
+
+      th, td {
+        border: 1px solid var(--line);
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th { background: #f1f5f9; }
+
+      .hero, .card, details {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero {
+        padding: 22px;
+        margin-bottom: 16px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .card { padding: 16px; }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .alert {
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin: 12px 0;
+        background: var(--warn);
+        border: 1px solid var(--warn-line);
+      }
+
+      details {
+        margin: 10px 0;
+        overflow: hidden;
+      }
+
+      summary {
+        cursor: pointer;
+        padding: 14px 16px;
+        font-weight: 700;
+      }
+
+      details[open] summary {
+        border-bottom: 1px solid var(--line);
+        background: #f8fafc;
+      }
+
+      .details-body { padding: 16px; }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        background: var(--brand);
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button.secondary {
+        background: #334155;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 360px;
+        box-sizing: border-box;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+        font-family: Consolas, Monaco, monospace;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--ink);
+        background: #ffffff;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 10px 0 0;
+      }
+
+      @media (max-width: 760px) {
+        body { padding: 14px; }
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <span class="badge">Plantilla copiable</span>
+      <h1>Generador de prompts con apoyo de IA</h1>
+      <p class="subtitle">Usa esta guia para pedirle a otra IA que genere los tres prompts principales del agente a partir de una hoja de vida.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Como usarlo</h2>
+        <ol>
+          <li>Copia la plantilla completa del cuadro principal.</li>
+          <li>Pegala en una IA conversacional junto con el texto de la hoja de vida.</li>
+          <li>Completa los campos entre corchetes como <code>[CIUDAD_BASE]</code>.</li>
+          <li>Pidele que devuelva exactamente los tres prompts finales.</li>
+          <li>Copia cada resultado en <code>Config</code>: <code>PROMPT_BUSQUEDA</code>, <code>PROMPT_ANALISIS</code> y <code>PROMPT_ACTUALIZACION</code>.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h2>Reglas importantes</h2>
+        <ul>
+          <li>No pegues API keys ni datos sensibles innecesarios.</li>
+          <li>No cambies variables como <code>{{perfil}}</code> o <code>{{empleo}}</code>.</li>
+          <li>Los prompts deben pedir JSON estricto, sin Markdown.</li>
+          <li>Si no hay salario publicado, la accion debe ser <code>Revisar</code>, no <code>Aplicar</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <details open>
+      <summary>Plantilla para copiar y pegar en una IA</summary>
+      <div class="details-body">
+        <p>Copia todo este bloque y pegalo en una IA junto con el texto de la hoja de vida.</p>
+        <textarea id="main-template" readonly>Actua como especialista en diseno de prompts para un agente de busqueda de empleos en Google Apps Script y Google Sheets.
+
+Necesito que analices la hoja de vida que pegare al final y generes tres prompts personalizados para configurar una hoja llamada Config.
+
+Los prompts que debes crear son:
+1. PROMPT_BUSQUEDA
+2. PROMPT_ANALISIS
+3. PROMPT_ACTUALIZACION
+
+Contexto del sistema:
+- El sistema usa Gemini con Google Search.
+- El sistema corre de forma pasiva con un trigger diario.
+- El sistema busca empleos remunerados y los registra en una hoja Empleos.
+- El sistema analiza empleos por lotes para cuidar la cuota gratuita de API.
+- La decision final de aplicar es humana; la IA solo recomienda.
+- No se generan fichas tecnicas automaticas.
+
+Configuracion base:
+- Ciudad base: [CIUDAD_BASE]
+- Pais base: [PAIS_BASE]
+- Salario base moneda: [SALARIO_BASE_MONEDA]
+- Salario base minimo: [SALARIO_BASE_MINIMO]
+- Multiplicador para otra ciudad del pais: [MULTIPLICADOR_OTRA_CIUDAD]
+- Multiplicador para otro pais: [MULTIPLICADOR_OTRO_PAIS]
+- Idiomas aceptados: [IDIOMAS_ACEPTADOS]
+- Fuentes prioritarias: [FUENTES_PRIORITARIAS]
+- Exclusiones: [EXCLUIR]
+- Resultados por busqueda: [RESULTADOS_POR_BUSQUEDA]
+
+Variables disponibles que debes conservar literalmente dentro de los prompts:
+{{fecha_hoy}}
+{{perfil}}
+{{empleo}}
+{{empleos_existentes}}
+{{ciudad_base}}
+{{pais_base}}
+{{resultados_por_busqueda}}
+{{fuentes_prioritarias}}
+{{idiomas_aceptados}}
+{{excluir}}
+{{salario_base_moneda}}
+{{salario_base_minimo}}
+{{multiplicador_otra_ciudad_colombia}}
+{{multiplicador_otro_pais}}
+{{salario_minimo_medellin_o_remoto}}
+{{salario_minimo_otra_ciudad_colombia}}
+{{salario_minimo_otro_pais}}
+{{salario_no_publicado_accion}}
+
+Reglas obligatorias para PROMPT_BUSQUEDA:
+- Debe buscar maximo {{resultados_por_busqueda}} empleos remunerados vigentes.
+- Debe priorizar empleos viables desde {{ciudad_base}}, {{pais_base}}.
+- Debe permitir empleos remotos, remotos globales, remotos regionales, hibridos o presenciales segun el perfil y ciudad base.
+- Debe incluir oportunidades fuera de la ciudad base solo si son muy fuertes o cumplen reglas salariales.
+- Debe priorizar cargos, sectores y palabras clave derivados de la hoja de vida.
+- Debe excluir oportunidades demasiado junior, no remuneradas, voluntariados, cursos o cargos irrelevantes.
+- Debe evitar duplicados usando {{empleos_existentes}}.
+- Debe devolver un arreglo JSON valido, sin Markdown.
+- Cada elemento debe tener exactamente estas claves:
+cargo, organizacion, tipo_organizacion, pais, ciudad, modalidad, link, fuente, fecha_publicacion, fecha_limite, area_profesional, seniority, salario, moneda, resumen, requisitos_clave.
+
+Reglas obligatorias para PROMPT_ANALISIS:
+- Debe evaluar un empleo contra {{perfil}} y {{empleo}}.
+- Debe clasificar modalidad: Remoto, Hibrido, Presencial o No claro.
+- Debe clasificar si se puede ejecutar desde {{ciudad_base}}.
+- Debe aplicar reglas salariales:
+  - Minimo para ciudad base o remoto viable: {{salario_minimo_medellin_o_remoto}} {{salario_base_moneda}}.
+  - Minimo para otra ciudad del pais: {{salario_minimo_otra_ciudad_colombia}} {{salario_base_moneda}}.
+  - Minimo para otro pais: {{salario_minimo_otro_pais}} {{salario_base_moneda}}.
+- Si no publica salario, no debe recomendar Aplicar.
+- Si no publica salario pero es relevante, debe recomendar {{salario_no_publicado_accion}}.
+- Debe calcular puntaje_match de 0 a 100.
+- Debe devolver un objeto JSON valido, sin Markdown.
+- El objeto debe tener exactamente estas claves:
+modalidad, ejecutable_desde_medellin, clasificacion_ubicacion, motivo_ubicacion, salario, moneda, parece_remunerado, salario_minimo_aplicable, cumple_salario, puntaje_match, nivel_match, razon_match, brechas, prioridad, accion_recomendada, notas_para_aplicar.
+
+Reglas obligatorias para PROMPT_ACTUALIZACION:
+- Debe revisar si una oferta sigue vigente.
+- Debe verificar fecha limite, estado del link y cambios relevantes.
+- No debe inventar informacion.
+- Debe devolver un objeto JSON valido, sin Markdown.
+- El objeto debe tener exactamente estas claves:
+estado_vigencia, fecha_limite, cambios_detectados, resumen_cambios.
+
+Tu tarea:
+1. Extrae del CV los cargos objetivo mas relevantes.
+2. Extrae sectores objetivo.
+3. Extrae palabras clave en espanol e ingles.
+4. Identifica exclusiones especificas para evitar ruido.
+5. Genera los tres prompts finales listos para copiar en Config.
+
+Formato de respuesta obligatorio:
+
+PROMPT_BUSQUEDA:
+[texto completo del prompt]
+
+PROMPT_ANALISIS:
+[texto completo del prompt]
+
+PROMPT_ACTUALIZACION:
+[texto completo del prompt]
+
+No uses tablas. No uses Markdown dentro de los prompts finales salvo listas simples con guiones. Conserva intactas todas las variables con doble llave.
+
+HOJA DE VIDA:
+[PEGA AQUI EL TEXTO COMPLETO O RESUMIDO DEL CV]</textarea>
+        <div class="actions">
+          <button onclick="copyTemplate('main-template')">Copiar plantilla completa</button>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Campos que conviene completar antes de copiar</summary>
+      <div class="details-body">
+        <table>
+          <tr><th>Campo</th><th>Ejemplo</th><th>Uso</th></tr>
+          <tr><td><code>[CIUDAD_BASE]</code></td><td>Medellin</td><td>Ciudad desde donde se quiere trabajar.</td></tr>
+          <tr><td><code>[PAIS_BASE]</code></td><td>Colombia</td><td>Pais de residencia principal.</td></tr>
+          <tr><td><code>[SALARIO_BASE_MONEDA]</code></td><td>COP</td><td>Moneda de referencia salarial.</td></tr>
+          <tr><td><code>[SALARIO_BASE_MINIMO]</code></td><td>6500000</td><td>Minimo para remoto o ciudad base.</td></tr>
+          <tr><td><code>[MULTIPLICADOR_OTRA_CIUDAD]</code></td><td>2</td><td>Exigencia si hay que mudarse dentro del pais.</td></tr>
+          <tr><td><code>[MULTIPLICADOR_OTRO_PAIS]</code></td><td>3</td><td>Exigencia si hay que mudarse a otro pais.</td></tr>
+          <tr><td><code>[IDIOMAS_ACEPTADOS]</code></td><td>Espanol, ingles</td><td>Idiomas validos para ofertas y postulaciones.</td></tr>
+          <tr><td><code>[FUENTES_PRIORITARIAS]</code></td><td>LinkedIn, paginas oficiales, ReliefWeb</td><td>Fuentes donde buscar.</td></tr>
+          <tr><td><code>[EXCLUIR]</code></td><td>voluntariados, practicas no remuneradas</td><td>Ruido que se debe evitar.</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <details>
+      <summary>Como evaluar la respuesta de la IA</summary>
+      <div class="details-body">
+        <ul>
+          <li>Debe entregar exactamente tres bloques: <code>PROMPT_BUSQUEDA</code>, <code>PROMPT_ANALISIS</code> y <code>PROMPT_ACTUALIZACION</code>.</li>
+          <li>Debe conservar intactas las variables con doble llave, por ejemplo <code>{{perfil}}</code>.</li>
+          <li>Debe pedir JSON valido y sin Markdown en cada prompt.</li>
+          <li><code>PROMPT_ANALISIS</code> debe incluir reglas salariales por ubicacion.</li>
+          <li>Debe prohibir recomendar <code>Aplicar</code> cuando no hay salario publicado.</li>
+        </ul>
+        <div class="alert">Si la IA cambia nombres de variables, corrige manualmente antes de pegar el prompt en Config. Una variable mal escrita no sera reemplazada por Apps Script.</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Donde pegar los resultados</summary>
+      <div class="details-body">
+        <p>Despues de generar los prompts, pega cada bloque en la columna <code>Valor</code> de la hoja <code>Config</code>:</p>
+        <table>
+          <tr><th>Resultado generado</th><th>Fila de Config</th></tr>
+          <tr><td><code>PROMPT_BUSQUEDA</code></td><td><code>PROMPT_BUSQUEDA</code></td></tr>
+          <tr><td><code>PROMPT_ANALISIS</code></td><td><code>PROMPT_ANALISIS</code></td></tr>
+          <tr><td><code>PROMPT_ACTUALIZACION</code></td><td><code>PROMPT_ACTUALIZACION</code></td></tr>
+        </table>
+      </div>
+    </details>
+
+    <script>
+      function copyTemplate(id) {
+        const el = document.getElementById(id);
+        el.select();
+        el.setSelectionRange(0, el.value.length);
+        document.execCommand('copy');
+      }
+    </script>
+  </body>
+</html>

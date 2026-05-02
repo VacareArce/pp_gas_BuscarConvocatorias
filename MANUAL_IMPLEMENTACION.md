@@ -148,6 +148,8 @@ Los prompts viven en `Config`:
 | `PROMPT_ANALISIS` | Instrucciones para evaluar compatibilidad, modalidad, salario y accion recomendada. |
 | `PROMPT_ACTUALIZACION` | Reservado para revisar vigencia de empleos. |
 
+El menu tambien incluye `Ver generador de prompts`, una plantilla copiable para pegar en otra IA junto con una hoja de vida y pedirle que genere los tres prompts principales del sistema.
+
 Variables disponibles en prompts:
 
 | Variable | Significado |
@@ -204,6 +206,8 @@ Ejemplo:
 
 Nota: Apps Script ejecuta triggers diarios alrededor de la hora indicada, no necesariamente al minuto exacto.
 
+El campo `EJECUCION_DIARIA_HORA` acepta valores como `1:00`, `01:00`, `13:00` o celdas con formato hora de Google Sheets. El script toma la hora e instala el trigger dentro de la ventana aproximada correspondiente.
+
 ## Detener ejecucion diaria
 
 En Google Sheets:
@@ -234,6 +238,14 @@ Columnas clave:
 | `Accion recomendada` | Aplicar, Revisar o Descartar. |
 | `Estado` | Nuevo, Revisado, Aplicado, Descartado o Vencido. |
 | `Notas para aplicar` | Recomendaciones utiles para revisar la oferta. |
+
+Para revisar una oferta en formato mas comodo, selecciona una celda de la fila en `Empleos` y usa:
+
+```text
+Agente Empleos HV > Ver empleo seleccionado
+```
+
+La vista HTML muestra los datos principales del empleo, evaluacion IA, salario, modalidad, brechas y link. No modifica la hoja.
 
 ## Accion recomendada
 
@@ -272,6 +284,31 @@ Para cuidar el API gratuito:
 - No hay fichas tecnicas automaticas.
 - No hay ejecuciones manuales de IA desde el menu.
 - Los errores 429 o 503 se manejan con reintentos y triggers diferidos.
+
+## Reintentos y fallos definitivos
+
+El sistema usa reintentos controlados para evitar loops y gasto accidental de cuota.
+
+Campos principales en `Config`:
+
+| Clave | Valor recomendado | Uso |
+|---|---:|---|
+| `MAX_REINTENTOS_INMEDIATOS` | 1 | Despues del primer fallo de Gemini, intenta una vez mas. |
+| `SEGUNDOS_REINTENTO_INMEDIATO` | 10 | Segundos de espera antes del reintento inmediato. |
+| `MAX_CICLOS_FALLO_GEMINI` | 5 | Maximo de ciclos fallidos antes de abandonar. |
+| `MINUTOS_REINTENTO_DIFERIDO` | 30 | Minutos antes de reintentar por trigger temporal. |
+| `EVITAR_TRIGGERS_DUPLICADOS` | Si | Evita crear varios triggers de recuperacion para la misma funcion. |
+
+Un ciclo fallido incluye:
+
+1. Intento inicial contra Gemini.
+2. Espera de `SEGUNDOS_REINTENTO_INMEDIATO`.
+3. Un reintento inmediato.
+4. Si vuelve a fallar, se agenda un reintento diferido.
+
+Si una tarea de `ColaIA` llega a `MAX_CICLOS_FALLO_GEMINI`, queda con estado `Fallo definitivo` y no se reintenta automaticamente.
+
+En busqueda, el contador de ciclos fallidos se guarda en propiedades del script y se reinicia cuando la busqueda vuelve a funcionar.
 
 ## Troubleshooting
 
@@ -358,5 +395,19 @@ clasp status
 5. `Configurar estructura` ejecutado.
 6. `Perfil` diligenciado.
 7. `Config` revisado.
-8. Trigger diario instalado.
-9. Al dia siguiente, revisar `Empleos`, `ColaIA` y `Log`.
+8. Prueba controlada ejecutada con `Probar ahora`.
+9. Trigger diario instalado.
+10. Al dia siguiente, revisar `Empleos`, `ColaIA` y `Log`.
+
+## Prueba controlada
+
+El menu incluye `Probar ahora` para validar el flujo sin esperar al trigger diario.
+
+Esta opcion pide confirmacion porque hace llamadas reales a Gemini usando la API key maestra. La prueba esta limitada a:
+
+| Accion | Limite |
+|---|---:|
+| Busqueda | 1 empleo nuevo |
+| Analisis | 1 empleo pendiente |
+
+Despues de ejecutarla, revisa `Empleos`, `ColaIA` y `Log`.

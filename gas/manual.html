@@ -209,18 +209,22 @@
           <li>Ejecuta <code>Agente Empleos HV &gt; Configurar estructura</code>.</li>
           <li>Diligencia la pestaña <code>Perfil</code> con datos del CV.</li>
           <li>Revisa la pestaña <code>Config</code>, especialmente salarios y prompts.</li>
+          <li>Ejecuta <code>Probar ahora</code> para validar el flujo con limites seguros.</li>
           <li>Ejecuta <code>Instalar trigger diario</code>.</li>
-          <li>Revisa periodicamente <code>Empleos</code>, <code>ColaIA</code> y <code>Log</code>.</li>
+          <li>Revisa periodicamente <code>Empleos</code>, <code>ColaIA</code> y <code>Log</code>. Usa <code>Ver empleo seleccionado</code> para ver una fila en formato comodo.</li>
         </ol>
       </div>
       <div class="card">
         <h2>Reglas clave</h2>
         <ul>
           <li>El agente funciona de forma pasiva con trigger diario.</li>
+          <li><code>Probar ahora</code> hace llamadas reales a Gemini, pero limita la prueba a 1 busqueda y 1 analisis.</li>
+          <li>Si Gemini falla temporalmente, el agente reintenta una vez a los 10 segundos y luego puede reintentar cada 30 minutos hasta 5 ciclos fallidos.</li>
           <li>No aplica automaticamente a empleos.</li>
           <li>Si una oferta no publica salario, debe quedar como <code>Revisar</code>, no <code>Aplicar</code>.</li>
           <li>Los prompts se pueden editar desde <code>Config</code>.</li>
           <li>Las variables con <code>{{doble_llave}}</code> las reemplaza Apps Script antes de llamar a Gemini.</li>
+          <li>Usa <code>Ver generador de prompts</code> si quieres pedirle a otra IA que cree prompts personalizados desde un CV.</li>
         </ul>
       </div>
     </section>
@@ -301,6 +305,15 @@
     </details>
 
     <details>
+      <summary>Ver empleo seleccionado</summary>
+      <div class="details-body">
+        <p>Cuando estes en la hoja <code>Empleos</code>, selecciona cualquier celda de una fila con datos y usa <code>Agente Empleos HV &gt; Ver empleo seleccionado</code>.</p>
+        <p>Se abrira una ventana HTML con una presentacion mas legible del cargo, organizacion, modalidad, salario, evaluacion IA, brechas, notas para aplicar y link de la oferta.</p>
+        <p>La vista no modifica la hoja. Solo lee la fila seleccionada.</p>
+      </div>
+    </details>
+
+    <details>
       <summary>Como interpretar Empleos</summary>
       <div class="details-body">
         <table>
@@ -328,9 +341,55 @@
     </details>
 
     <details>
+      <summary>Generador de prompts con otra IA</summary>
+      <div class="details-body">
+        <p>El menu incluye <code>Ver generador de prompts</code>, una plantilla diseñada para copiar y pegar en otra IA junto con una hoja de vida.</p>
+        <p>La plantilla le pide a la IA que genere los tres prompts configurables del sistema:</p>
+        <ul>
+          <li><code>PROMPT_BUSQUEDA</code></li>
+          <li><code>PROMPT_ANALISIS</code></li>
+          <li><code>PROMPT_ACTUALIZACION</code></li>
+        </ul>
+        <div class="alert warn">Revisa que la IA conserve intactas las variables con doble llave, como <code>{{perfil}}</code> y <code>{{empleo}}</code>.</div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Probar ahora</summary>
+      <div class="details-body">
+        <p>La opcion <code>Probar ahora</code> permite validar la configuracion sin esperar al trigger diario.</p>
+        <p>Antes de ejecutar, el sistema pide confirmacion porque consume llamadas reales a Gemini.</p>
+        <table>
+          <tr><th>Accion</th><th>Limite de prueba</th></tr>
+          <tr><td>Busqueda</td><td>Maximo 1 empleo nuevo</td></tr>
+          <tr><td>Analisis</td><td>Maximo 1 empleo pendiente</td></tr>
+        </table>
+        <p>Despues de la prueba revisa <code>Empleos</code>, <code>ColaIA</code> y <code>Log</code>.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Reintentos y fallos definitivos</summary>
+      <div class="details-body">
+        <p>El agente usa reintentos controlados para evitar loops y cuidar cuota.</p>
+        <table>
+          <tr><th>Config</th><th>Valor recomendado</th><th>Significado</th></tr>
+          <tr><td><code>MAX_REINTENTOS_INMEDIATOS</code></td><td>1</td><td>Despues del primer fallo, intenta una vez mas.</td></tr>
+          <tr><td><code>SEGUNDOS_REINTENTO_INMEDIATO</code></td><td>10</td><td>Espera antes del reintento inmediato.</td></tr>
+          <tr><td><code>MAX_CICLOS_FALLO_GEMINI</code></td><td>5</td><td>Maximo de ciclos fallidos antes de abandonar.</td></tr>
+          <tr><td><code>MINUTOS_REINTENTO_DIFERIDO</code></td><td>30</td><td>Tiempo antes de un reintento por trigger temporal.</td></tr>
+          <tr><td><code>EVITAR_TRIGGERS_DUPLICADOS</code></td><td>Si</td><td>Evita crear varios triggers de recuperacion para la misma funcion.</td></tr>
+        </table>
+        <p>Un ciclo fallido incluye el intento inicial y un reintento inmediato. Si ambos fallan, se agenda un reintento diferido.</p>
+        <p>Cuando una tarea de <code>ColaIA</code> supera el limite, queda como <code>Fallo definitivo</code> y no se reintenta mas automaticamente.</p>
+      </div>
+    </details>
+
+    <details>
       <summary>Ejecucion diaria y errores comunes</summary>
       <div class="details-body">
         <p>Para activar el flujo automatico usa <code>Instalar trigger diario</code>. Para detenerlo usa <code>Eliminar triggers del agente</code>.</p>
+        <p>El campo <code>EJECUCION_DIARIA_HORA</code> acepta texto como <code>1:00</code>, <code>01:00</code>, <code>13:00</code> o una celda con formato hora de Google Sheets. Apps Script ejecuta dentro de una ventana aproximada de una hora, por ejemplo de <code>13:00</code> a <code>14:00</code>.</p>
         <table>
           <tr><th>Problema</th><th>Que revisar</th></tr>
           <tr><td>No aparece el menu</td><td>Recarga la hoja. Si persiste, ejecuta <code>onOpen</code> desde Apps Script.</td></tr>

@@ -167,7 +167,7 @@ function extraerJson_(texto, esperarArreglo) {
 
 function contenidoTextoGemini_(response) {
   const json = JSON.parse(response.getContentText());
-  if (json.error) throw new Error(json.error.message || response.getContentText());
+  if (json.error) throw crearErrorGemini_(json.error.message || response.getContentText(), json.error.code);
   if (!json.candidates || !json.candidates[0] || !json.candidates[0].content) {
     throw new Error('Gemini no devolvio contenido util.');
   }
@@ -179,6 +179,8 @@ function contenidoTextoGemini_(response) {
 }
 
 function llamarGeminiTexto_(prompt, esManual, temperature) {
+  console.log('[GEMINI] Preparando llamada. esManual=' + (esManual === true) + ', temperature=' + (temperature === undefined ? 0.2 : temperature) + ', promptChars=' + String(prompt || '').length);
+  const config = obtenerConfig_();
   const apiKey = _obtenerApiKey(esManual);
   const baseUrl = typeof CONFIG !== 'undefined' ? CONFIG.GEMINI_API_URL : 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   const url = `${baseUrl}?key=${apiKey}`;
@@ -188,7 +190,8 @@ function llamarGeminiTexto_(prompt, esManual, temperature) {
     generationConfig: { temperature: temperature === undefined ? 0.2 : temperature }
   };
   const options = { method: 'post', contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true };
-  const response = llamarGeminiConReintentos(url, options);
+  const response = llamarGeminiConReintentos(url, options, config);
+  console.log('[GEMINI] Respuesta HTTP recibida. responseChars=' + response.getContentText().length);
   return contenidoTextoGemini_(response);
 }
 
@@ -201,35 +204,62 @@ function escribirLog_(funcion, resultado, mensaje, lote) {
   }
 }
 
-/**
- * Función que envuelve la llamada a la API con reintentos automáticos (Exponential Backoff)
- * Mitiga los errores 503 (Alta demanda temporal) y 429 (Límite de cuota)
- */
-function llamarGeminiConReintentos(url, options, maxReintentos = 7) {
+function llamarGeminiConReintentos(url, options, config) {
+  const maxReintentos = obtenerNumeroConfig_(config.MAX_REINTENTOS_INMEDIATOS, 1);
+  const segundosEspera = obtenerNumeroConfig_(config.SEGUNDOS_REINTENTO_INMEDIATO, 10);
   let intento = 0;
-  let tiempoEspera = 2000; // 2 segundos iniciales
-  
+
   while (intento <= maxReintentos) {
-    const response = UrlFetchApp.fetch(url, options);
-    const json = JSON.parse(response.getContentText());
-    
-    // Si la respuesta es exitosa o llegamos al último intento, la devolvemos
-    if (!json.error || intento === maxReintentos) {
-      return response; 
-    }
-    
-    // Si es un error 5XX (Saturación, Error Interno, Timeout) o 429 (Cuota excedida)
-    if (json.error && (json.error.code >= 500 || json.error.code === 429)) {
-      console.warn(`Error de Gemini (${json.error.code}) en intento ${intento + 1}. Reintentando en ${tiempoEspera/1000}s...`);
-      Utilities.sleep(tiempoEspera);
-      tiempoEspera *= 2; // Exponential backoff (2s, 4s, 8s, 16s, 32s...)
-      if (tiempoEspera > 40000) tiempoEspera = 40000; // Tope máximo de 40s por espera para no agotar el límite de 6 min de Apps Script
+    try {
+      console.log('[GEMINI] Intento HTTP ' + (intento + 1) + ' de ' + (maxReintentos + 1) + '.');
+      const response = UrlFetchApp.fetch(url, options);
+      const json = JSON.parse(response.getContentText());
+      if (!json.error) {
+        console.log('[GEMINI] Intento exitoso ' + (intento + 1) + '.');
+        return response;
+      }
+
+      const error = crearErrorGemini_(json.error.message || response.getContentText(), json.error.code);
+      console.warn('[GEMINI] Error en intento ' + (intento + 1) + '. codigo=' + (error.codigoGemini || '') + ', reintentable=' + esErrorReintentable_(error) + ', mensaje=' + error.message);
+      if (!esErrorReintentable_(error) || intento === maxReintentos) throw error;
+
+      escribirLog_('GEMINI_CALL', 'REINTENTO_INMEDIATO', `Error ${error.codigoGemini || ''}. Esperando ${segundosEspera}s.`, '');
+      Utilities.sleep(segundosEspera * 1000);
       intento++;
-    } else {
-      // Otro error que no se soluciona reintentando (ej. 400 Bad Request)
-      return response;
+    } catch (errorFetch) {
+      const error = normalizarErrorReintento_(errorFetch);
+      console.warn('[GEMINI] Excepcion en intento ' + (intento + 1) + '. reintentable=' + esErrorReintentable_(error) + ', mensaje=' + error.message);
+      if (!esErrorReintentable_(error) || intento === maxReintentos) throw error;
+
+      escribirLog_('GEMINI_CALL', 'REINTENTO_INMEDIATO', `Error temporal. Esperando ${segundosEspera}s: ${error.message}`, '');
+      Utilities.sleep(segundosEspera * 1000);
+      intento++;
     }
   }
+}
+
+function crearErrorGemini_(mensaje, codigo) {
+  const error = new Error(mensaje || 'Error de Gemini');
+  error.codigoGemini = codigo;
+  error.reintentable = codigo === 429 || (codigo >= 500 && codigo <= 599);
+  return error;
+}
+
+function normalizarErrorReintento_(error) {
+  if (error && error.reintentable !== undefined) return error;
+  const normalizado = new Error(error && error.message ? error.message : String(error));
+  normalizado.reintentable = /timeout|timed out|temporar|socket|network|fetch/i.test(normalizado.message);
+  return normalizado;
+}
+
+function esErrorReintentable_(error) {
+  return Boolean(error && error.reintentable === true);
+}
+
+function obtenerNumeroConfig_(valor, fallback) {
+  const limpio = String(valor === undefined || valor === null ? '' : valor).replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
+  const numero = parseFloat(limpio);
+  return isNaN(numero) ? fallback : numero;
 }
 
 /**
@@ -237,6 +267,7 @@ function llamarGeminiConReintentos(url, options, maxReintentos = 7) {
  */
 function limpiarTriggerEspecifico(evento) {
   if (evento && evento.triggerUid) {
+    console.log('[TRIGGER] Limpiando trigger especifico. triggerUid=' + evento.triggerUid);
     const todosLosTriggers = ScriptApp.getProjectTriggers();
     todosLosTriggers.forEach(t => {
       if (t.getUniqueId() === evento.triggerUid) {
@@ -246,13 +277,24 @@ function limpiarTriggerEspecifico(evento) {
   }
 }
 
-/**
- * Crea un trigger temporizado (30 minutos) que ejecuta una función específica.
- */
-function agendarReintento30Mins(nombreFuncionProxy) {
-  console.warn(`Programando reintento diferido para la función: ${nombreFuncionProxy} en 30 minutos...`);
+function agendarReintentoDiferido_(nombreFuncionProxy, minutos, config, lote) {
+  const evitarDuplicados = String(config.EVITAR_TRIGGERS_DUPLICADOS || 'Si').toLowerCase() === 'si';
+  if (evitarDuplicados && existeTriggerParaFuncion_(nombreFuncionProxy)) {
+    console.warn('[REINTENTO] Omitido por trigger duplicado. funcion=' + nombreFuncionProxy + ', lote=' + (lote || ''));
+    escribirLog_('REINTENTO', 'OMITIDO', `Ya existe trigger pendiente para ${nombreFuncionProxy}.`, lote || '');
+    return false;
+  }
+
+  console.warn(`Programando reintento diferido para la funcion: ${nombreFuncionProxy} en ${minutos} minutos...`);
   ScriptApp.newTrigger(nombreFuncionProxy)
     .timeBased()
-    .after(30 * 60 * 1000)
+    .after(minutos * 60 * 1000)
     .create();
+  console.log('[REINTENTO] Trigger creado. funcion=' + nombreFuncionProxy + ', minutos=' + minutos + ', lote=' + (lote || ''));
+  escribirLog_('REINTENTO', 'AGENDADO', `${nombreFuncionProxy} en ${minutos} min.`, lote || '');
+  return true;
+}
+
+function existeTriggerParaFuncion_(nombreFuncion) {
+  return ScriptApp.getProjectTriggers().some(trigger => trigger.getHandlerFunction() === nombreFuncion);
 }

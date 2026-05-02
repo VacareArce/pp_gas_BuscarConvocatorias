@@ -2,6 +2,7 @@
  * Proxy para recuperar una busqueda diaria despues de un fallo temporal.
  */
 function recuperarBuscarEmpleos(e) {
+  console.log('[RECUPERACION_BUSQUEDA] Iniciando reintento diferido de busqueda. triggerUid=' + (e && e.triggerUid ? e.triggerUid : 'sin-triggerUid'));
   limpiarTriggerEspecifico(e);
   buscarEmpleosPorPerfil(false);
 }
@@ -10,6 +11,7 @@ function recuperarBuscarEmpleos(e) {
  * Proxy para recuperar analisis por lotes despues de un fallo temporal.
  */
 function recuperarAnalizarEmpleos(e) {
+  console.log('[RECUPERACION_ANALISIS] Iniciando reintento diferido de analisis. triggerUid=' + (e && e.triggerUid ? e.triggerUid : 'sin-triggerUid'));
   limpiarTriggerEspecifico(e);
   analizarLoteEmpleos(false);
 }
@@ -18,14 +20,17 @@ function recuperarAnalizarEmpleos(e) {
  * Flujo principal diario: busca empleos nuevos y analiza un lote pequeno.
  */
 function procesarFlujoDiario(esManual) {
+  console.log('[FLUJO_DIARIO] Inicio. esManual=' + (esManual === true));
   buscarEmpleosPorPerfil(esManual === true);
   analizarLoteEmpleos(esManual === true);
+  console.log('[FLUJO_DIARIO] Fin.');
 }
 
 /**
  * Busca empleos remunerados segun el perfil y deja el analisis detallado en cola.
  */
-function buscarEmpleosPorPerfil(esManual) {
+function buscarEmpleosPorPerfil(esManual, overrides) {
+  console.log('[BUSQUEDA] Inicio. esManual=' + (esManual === true) + ', overrides=' + JSON.stringify(overrides || {}));
   configurarEstructuraEmpleos();
   const config = obtenerConfig_();
   const perfil = obtenerPerfilTexto_();
@@ -33,7 +38,8 @@ function buscarEmpleosPorPerfil(esManual) {
   const colaSheet = _sheet(CONFIG.SHEETS.COLA);
   const fechaHoy = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy');
   const existentes = obtenerResumenEmpleosExistentes_();
-  const resultadosPorBusqueda = parseInt(config.RESULTADOS_POR_BUSQUEDA, 10) || 5;
+  const resultadosPorBusqueda = (overrides && overrides.resultadosPorBusqueda) || parseInt(config.RESULTADOS_POR_BUSQUEDA, 10) || 5;
+  console.log('[BUSQUEDA] Config cargada. resultadosPorBusqueda=' + resultadosPorBusqueda + ', ciudad=' + (config.CIUDAD_BASE || '') + ', pais=' + (config.PAIS_BASE || ''));
 
   const variables = crearVariablesPrompt_(config, perfil, {
     fecha_hoy: fechaHoy,
@@ -43,9 +49,12 @@ function buscarEmpleosPorPerfil(esManual) {
   const prompt = reemplazarVariablesPrompt_(config.PROMPT_BUSQUEDA, variables);
 
   try {
+    console.log('[BUSQUEDA] Llamando a Gemini para buscar empleos.');
     const texto = llamarGeminiTexto_(prompt, esManual === true, 0.25);
     const empleos = extraerJson_(texto, true);
+    console.log('[BUSQUEDA] Respuesta parseada. empleosRecibidos=' + (Array.isArray(empleos) ? empleos.length : 0));
     if (!Array.isArray(empleos) || empleos.length === 0) {
+      resetearCiclosFalloBusqueda_();
       escribirLog_('buscarEmpleosPorPerfil', 'OK', 'No se encontraron empleos nuevos.', '');
       return 'No se encontraron empleos nuevos.';
     }
@@ -54,7 +63,10 @@ function buscarEmpleosPorPerfil(esManual) {
     let insertados = 0;
 
     empleos.slice(0, resultadosPorBusqueda).forEach(empleo => {
-      if (esDuplicadoEmpleo_(empleo, dedupe)) return;
+      if (esDuplicadoEmpleo_(empleo, dedupe)) {
+        console.log('[BUSQUEDA] Duplicado omitido: ' + ((empleo.cargo || 'sin cargo') + ' - ' + (empleo.organizacion || 'sin organizacion')));
+        return;
+      }
 
       const fila = [
         new Date(),
@@ -94,33 +106,42 @@ function buscarEmpleosPorPerfil(esManual) {
       empleosSheet.appendRow(fila);
       const filaEmpleo = empleosSheet.getLastRow();
       colaSheet.appendRow([new Date(), 'ANALIZAR', 'Pendiente', filaEmpleo, 0, '', '', 'Media']);
+      console.log('[BUSQUEDA] Empleo insertado. fila=' + filaEmpleo + ', cargo=' + (empleo.cargo || '') + ', organizacion=' + (empleo.organizacion || ''));
       registrarDedupe_(empleo, dedupe);
       insertados++;
     });
 
     const mensaje = `Se agregaron ${insertados} empleos nuevos y quedaron en cola de analisis.`;
+    resetearCiclosFalloBusqueda_();
     escribirLog_('buscarEmpleosPorPerfil', 'OK', mensaje, '');
+    console.log('[BUSQUEDA] Fin OK. ' + mensaje);
     return mensaje;
   } catch (error) {
+    console.error('[BUSQUEDA] Error: ' + error.message);
     escribirLog_('buscarEmpleosPorPerfil', 'ERROR', error.message, '');
     if (esManual === true) throw error;
-    agendarReintento30Mins('recuperarBuscarEmpleos');
+    manejarFalloBusqueda_(error, config);
   }
 }
 
 /**
  * Analiza un lote pequeno de empleos pendientes para cuidar la cuota gratuita.
  */
-function analizarLoteEmpleos(esManual) {
+function analizarLoteEmpleos(esManual, overrides) {
+  console.log('[ANALISIS] Inicio. esManual=' + (esManual === true) + ', overrides=' + JSON.stringify(overrides || {}));
   configurarEstructuraEmpleos();
   const config = obtenerConfig_();
   const perfil = obtenerPerfilTexto_();
   const empleosSheet = _sheet(CONFIG.SHEETS.EMPLEOS);
   const colaSheet = _sheet(CONFIG.SHEETS.COLA);
-  const maxLote = parseInt(config.EMPLEOS_POR_LOTE_ANALISIS, 10) || 3;
+  const maxLote = (overrides && overrides.empleosPorLoteAnalisis) || parseInt(config.EMPLEOS_POR_LOTE_ANALISIS, 10) || 3;
   const tareas = obtenerTareasPendientes_(colaSheet, 'ANALIZAR', maxLote);
+  console.log('[ANALISIS] Tareas seleccionadas=' + tareas.length + ', maxLote=' + maxLote);
 
-  if (tareas.length === 0) return 'No hay empleos pendientes por analizar.';
+  if (tareas.length === 0) {
+    console.log('[ANALISIS] No hay empleos pendientes por analizar.');
+    return 'No hay empleos pendientes por analizar.';
+  }
 
   let procesados = 0;
 
@@ -128,35 +149,52 @@ function analizarLoteEmpleos(esManual) {
     const tarea = tareas[i];
     const filaEmpleo = parseInt(tarea.filaEmpleo, 10);
     if (!filaEmpleo || filaEmpleo < 2 || filaEmpleo > empleosSheet.getLastRow()) {
+      console.warn('[ANALISIS] Tarea con fila invalida. filaCola=' + tarea.filaCola + ', filaEmpleo=' + tarea.filaEmpleo);
       marcarTarea_(colaSheet, tarea.filaCola, 'Error', 'Fila de empleo invalida');
       continue;
     }
 
+    console.log('[ANALISIS] Procesando tarea. filaCola=' + tarea.filaCola + ', filaEmpleo=' + filaEmpleo + ', intentosPrevios=' + (tarea.intentos || 0));
     marcarTarea_(colaSheet, tarea.filaCola, 'Procesando', '');
     const empleo = leerEmpleo_(empleosSheet, filaEmpleo);
     const variables = crearVariablesPrompt_(config, perfil, { empleo: JSON.stringify(empleo, null, 2) });
     const prompt = reemplazarVariablesPrompt_(config.PROMPT_ANALISIS, variables);
 
     try {
+      console.log('[ANALISIS] Llamando a Gemini para filaEmpleo=' + filaEmpleo + '.');
       const texto = llamarGeminiTexto_(prompt, esManual === true, 0.15);
       const analisis = extraerJson_(texto, false);
+      console.log('[ANALISIS] Respuesta parseada para filaEmpleo=' + filaEmpleo + ', accion=' + (analisis.accion_recomendada || 'sin accion') + ', puntaje=' + (analisis.puntaje_match || 'sin puntaje'));
       escribirAnalisisEmpleo_(empleosSheet, filaEmpleo, analisis);
       marcarTarea_(colaSheet, tarea.filaCola, 'Completado', '');
+      console.log('[ANALISIS] Tarea completada. filaCola=' + tarea.filaCola + ', filaEmpleo=' + filaEmpleo);
       procesados++;
       SpreadsheetApp.flush();
     } catch (error) {
+      console.error('[ANALISIS] Error en filaEmpleo=' + filaEmpleo + ': ' + error.message);
       const intentos = (parseInt(tarea.intentos, 10) || 0) + 1;
       colaSheet.getRange(tarea.filaCola, 5).setValue(intentos);
-      marcarTarea_(colaSheet, tarea.filaCola, 'Error', error.message);
       escribirLog_('analizarLoteEmpleos', 'ERROR', error.message, filaEmpleo);
       if (esManual === true) throw error;
-      agendarReintento30Mins('recuperarAnalizarEmpleos');
+
+      const maxCiclos = obtenerNumeroConfig_(config.MAX_CICLOS_FALLO_GEMINI, 5);
+      const minutosReintento = obtenerNumeroConfig_(config.MINUTOS_REINTENTO_DIFERIDO, 30);
+      if (!esErrorReintentable_(error) || intentos >= maxCiclos) {
+        marcarTarea_(colaSheet, tarea.filaCola, 'Fallo definitivo', error.message, 0);
+        console.error('[ANALISIS] Fallo definitivo. filaEmpleo=' + filaEmpleo + ', intentos=' + intentos + ', maxCiclos=' + maxCiclos);
+        escribirLog_('COLAIA', 'FALLO_DEFINITIVO', `Fila ${filaEmpleo} supero limite o error no reintentable: ${error.message}`, filaEmpleo);
+      } else {
+        marcarTarea_(colaSheet, tarea.filaCola, 'Error', error.message, minutosReintento);
+        console.warn('[ANALISIS] Reintento diferido solicitado. filaEmpleo=' + filaEmpleo + ', intentos=' + intentos + '/' + maxCiclos + ', minutos=' + minutosReintento);
+        agendarReintentoDiferido_('recuperarAnalizarEmpleos', minutosReintento, config, filaEmpleo);
+      }
       break;
     }
   }
 
   const mensaje = `Analisis completado para ${procesados} empleo(s).`;
   escribirLog_('analizarLoteEmpleos', 'OK', mensaje, '');
+  console.log('[ANALISIS] Fin. ' + mensaje);
   return mensaje;
 }
 
@@ -194,6 +232,39 @@ function numeroConfig_(valor, fallback) {
   const limpio = String(valor || '').replace(/[^0-9.,-]/g, '').replace(/\./g, '').replace(',', '.');
   const numero = parseFloat(limpio);
   return isNaN(numero) ? fallback : numero;
+}
+
+function manejarFalloBusqueda_(error, config) {
+  if (!esErrorReintentable_(error)) {
+    console.warn('[BUSQUEDA] Error no reintentable. No se agenda reintento: ' + error.message);
+    escribirLog_('BUSQUEDA', 'SIN_REINTENTO', `Error no reintentable: ${error.message}`, 'BUSQUEDA');
+    return;
+  }
+
+  const ciclos = incrementarCiclosFalloBusqueda_();
+  const maxCiclos = obtenerNumeroConfig_(config.MAX_CICLOS_FALLO_GEMINI, 5);
+  if (ciclos >= maxCiclos) {
+    console.error('[BUSQUEDA] Fallo definitivo. ciclos=' + ciclos + ', maxCiclos=' + maxCiclos + ', error=' + error.message);
+    escribirLog_('BUSQUEDA', 'FALLO_DEFINITIVO', `Supero ${maxCiclos} ciclos fallidos: ${error.message}`, 'BUSQUEDA');
+    return;
+  }
+
+  const minutosReintento = obtenerNumeroConfig_(config.MINUTOS_REINTENTO_DIFERIDO, 30);
+  escribirLog_('BUSQUEDA', 'REINTENTO_DIFERIDO', `Ciclo fallido ${ciclos}/${maxCiclos}.`, 'BUSQUEDA');
+  console.warn('[BUSQUEDA] Reintento diferido solicitado. ciclos=' + ciclos + '/' + maxCiclos + ', minutos=' + minutosReintento);
+  agendarReintentoDiferido_('recuperarBuscarEmpleos', minutosReintento, config, 'BUSQUEDA');
+}
+
+function incrementarCiclosFalloBusqueda_() {
+  const props = PropertiesService.getScriptProperties();
+  const actual = parseInt(props.getProperty('BUSQUEDA_CICLOS_FALLO_GEMINI') || '0', 10) || 0;
+  const nuevo = actual + 1;
+  props.setProperty('BUSQUEDA_CICLOS_FALLO_GEMINI', String(nuevo));
+  return nuevo;
+}
+
+function resetearCiclosFalloBusqueda_() {
+  PropertiesService.getScriptProperties().deleteProperty('BUSQUEDA_CICLOS_FALLO_GEMINI');
 }
 
 function obtenerResumenEmpleosExistentes_() {
@@ -254,12 +325,13 @@ function obtenerTareasPendientes_(sheet, tipo, maxLote) {
   return tareas;
 }
 
-function marcarTarea_(sheet, filaCola, estado, error) {
+function marcarTarea_(sheet, filaCola, estado, error, minutosReintento) {
   sheet.getRange(filaCola, 3).setValue(estado);
   sheet.getRange(filaCola, 6).setValue(error || '');
   if (estado === 'Error') {
-    sheet.getRange(filaCola, 7).setValue(new Date(Date.now() + 30 * 60 * 1000));
-  } else if (estado === 'Completado') {
+    const minutos = minutosReintento === undefined ? 30 : minutosReintento;
+    sheet.getRange(filaCola, 7).setValue(new Date(Date.now() + minutos * 60 * 1000));
+  } else if (estado === 'Completado' || estado === 'Fallo definitivo') {
     sheet.getRange(filaCola, 7).setValue('');
   }
 }

@@ -57,6 +57,7 @@ Busca maximo {{resultados_por_busqueda}} empleos remunerados vigentes para este 
 {{perfil}}
 
 Condiciones:
+- REGLA ESTRICTA DE VIGENCIA: Verifica minuciosamente que la oferta de empleo sigue ABIERTA. Si la fecha límite ya pasó, o el empleo fue publicado hace más de 45 días sin evidencia de seguir activo, DESCÁRTALO por completo.
 - La persona vive en {{ciudad_base}}, {{pais_base}}.
 - Prioriza empleos remotos, hibridos en Medellin o presenciales en Medellin.
 - Incluye empleos fuera de Medellin solo si son de muy alto ajuste profesional o alta remuneracion.
@@ -101,6 +102,7 @@ Criterios:
 - Si publica salario igual o mayor al minimo aplicable y el match es alto, puedes recomendar Aplicar.
 - Calcula puntaje match de 0 a 100.
 - Recomienda Aplicar, Revisar o Descartar.
+- REGLA DE VIGENCIA: Verifica minuciosamente si la convocatoria sigue abierta. Si detectas que ya cerró o expiró, tu accion_recomendada DEBE SER estrictamente "Descartar", asigna un puntaje de 0, y en notas_para_aplicar escribe "Convocatoria cerrada".
 
 Devuelve unicamente un objeto JSON valido. No uses Markdown.
 El objeto debe tener exactamente estas claves:
@@ -133,6 +135,11 @@ const CONFIG_DEFAULTS = [
   ['PRIORIZAR_SALARIO_PUBLICADO', 'Si'],
   ['PUNTAJE_MINIMO_GUARDAR', '60'],
   ['PUNTAJE_MINIMO_FUERA_MEDELLIN', '88'],
+  ['MAX_REINTENTOS_INMEDIATOS', '1'],
+  ['SEGUNDOS_REINTENTO_INMEDIATO', '10'],
+  ['MAX_CICLOS_FALLO_GEMINI', '5'],
+  ['MINUTOS_REINTENTO_DIFERIDO', '30'],
+  ['EVITAR_TRIGGERS_DUPLICADOS', 'Si'],
   ['FUENTES_PRIORITARIAS', 'LinkedIn, paginas oficiales/directas de organizaciones'],
   ['IDIOMAS_ACEPTADOS', 'Espanol, ingles'],
   ['EXCLUIR', 'voluntariado, practicas no remuneradas, cursos, empleos sin remuneracion'],
@@ -146,7 +153,7 @@ const CONFIG_NOTES = {
   'PAIS_BASE': 'Pais de residencia usado para evaluar elegibilidad, ubicacion y remoto.',
   'RESULTADOS_POR_BUSQUEDA': 'Cantidad maxima de empleos nuevos que se buscaran por ejecucion diaria.',
   'EMPLEOS_POR_LOTE_ANALISIS': 'Cantidad maxima de empleos que se analizaran por lote para cuidar la cuota gratuita de la API.',
-  'EJECUCION_DIARIA_HORA': 'Hora aproximada para instalar el trigger diario. Apps Script no garantiza el minuto exacto.',
+  'EJECUCION_DIARIA_HORA': 'Hora aproximada para instalar el trigger diario. Puedes escribir 1:00, 01:00, 13:00 o usar formato hora de Google Sheets. Apps Script ejecuta dentro de una ventana horaria, no al minuto exacto.',
   'SALARIO_MONEDA': 'Campo heredado por compatibilidad. Usa la misma moneda que SALARIO_BASE_MONEDA.',
   'SALARIO_MINIMO': 'Campo heredado por compatibilidad. Usa el mismo valor que SALARIO_BASE_MINIMO.',
   'SALARIO_BASE_MONEDA': 'Moneda de referencia para calcular los minimos salariales con multiplicadores.',
@@ -159,6 +166,11 @@ const CONFIG_NOTES = {
   'PRIORIZAR_SALARIO_PUBLICADO': 'Indica a la IA que favorezca ofertas con salario visible y competitivo.',
   'PUNTAJE_MINIMO_GUARDAR': 'Puntaje minimo desde el cual una oferta empieza a valer la pena revisar.',
   'PUNTAJE_MINIMO_FUERA_MEDELLIN': 'Umbral mas alto para oportunidades que requieren mudanza o presencialidad fuera de Medellin.',
+  'MAX_REINTENTOS_INMEDIATOS': 'Cantidad de reintentos inmediatos despues del primer fallo de Gemini. Recomendado: 1.',
+  'SEGUNDOS_REINTENTO_INMEDIATO': 'Segundos de espera antes del reintento inmediato. Recomendado: 10.',
+  'MAX_CICLOS_FALLO_GEMINI': 'Maximo de ciclos fallidos antes de abandonar. Cada ciclo incluye intento inicial y reintento inmediato.',
+  'MINUTOS_REINTENTO_DIFERIDO': 'Minutos que espera el agente antes de reintentar por trigger temporal. Recomendado: 30.',
+  'EVITAR_TRIGGERS_DUPLICADOS': 'Si esta en Si, no crea otro trigger de recuperacion si ya hay uno pendiente para la misma funcion.',
   'FUENTES_PRIORITARIAS': 'Portales o fuentes que la IA debe priorizar al buscar empleos.',
   'IDIOMAS_ACEPTADOS': 'Idiomas aceptables para las ofertas y postulaciones.',
   'EXCLUIR': 'Tipos de ofertas que deben evitarse, como voluntariados, practicas no remuneradas o cargos irrelevantes.',
